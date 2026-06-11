@@ -1,8 +1,6 @@
 'use strict'
 const log = require('./logger')
 
-const TOKEN_CACHE_KEY = process.env.TOKEN_CACHE_KEY || process.env.DISCORD_CLIENT_SECRET
-
 function encryptId(str, key){
   if(!str || !key) return
   return CryptoJS.AES.encrypt(str, key).toString()
@@ -13,9 +11,9 @@ function decryptId(str, key){
 }
 
 module.exports = class {
-  constructor({ mongo, collection }){
-    if(!mongo || !collection) throw `missing db info`
-    this._mongo = mongo, this._collection = collection, this._cache_ready = false
+  constructor({ mongo, collection, encryptionKey }){
+    if(!mongo || !collection || !encryptionKey) throw `missing db info`
+    this._mongo = mongo, this._collection = collection, this._cache_ready = false, this.encryption_key = encryptionKey
     this._init()
   }
   _init(){
@@ -36,7 +34,7 @@ module.exports = class {
       let obj = await this._mongo.get( this._collection, { _id: key } )
       if(!obj?.data) return
 
-      let decryptedStr = decryptId(obj?.data, TOKEN_CACHE_KEY)
+      let decryptedStr = decryptId(obj?.data, this.encryption_key)
       if(decryptedStr) return JSON.parse(decryptedStr)
     }catch(e){
       log.error(e)
@@ -45,7 +43,7 @@ module.exports = class {
   async set(key, data){
     try{
       if(!key || !data || !this._cache_ready) return
-      let encryptedStr = encryptId(JSON.stringify(data), TOKEN_CACHE_KEY)
+      let encryptedStr = encryptId(JSON.stringify(data), this.encryption_key)
       if(!encryptedStr) return
 
       return await this._mongo.set( this._collection, { _id: key }, { data: encryptedStr })

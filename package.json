@@ -1,5 +1,5 @@
 {
-  "name": "token-cache",
+  "name": "encrypted-cache",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,8 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@babel/runtime": "^7.29.2",
     "crypto-js": "^4.2.0",
-    "rqlite-js": "^2.5.7"
+    "mongodb": "^7.3.0"
   }
 }
